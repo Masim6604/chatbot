@@ -21,11 +21,11 @@ model: "llama-3.3-70b-versatile",
       parameters: {
         type: "object",
         properties: {
-          querey: {
+          query: {
             type: "string"
           }
         },
-        required: ["querey"]
+        required: ["query"]
       }
     }
   }
@@ -53,11 +53,11 @@ for(const toolCall of message.tool_calls){
 
    const args = JSON.parse(toolCall.function.arguments);
 
-    const result =await topic_searching(args.querey);
+    const result =await topic_searching(args.query);
     Messages.push({
       role:"tool",
       tool_call_id: toolCall.id,   
-      content:result.join("\n")
+      content:result
     })
 }
 
@@ -90,19 +90,31 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 let Messages=  [
    {
         role:"system",
-        content:"You are an assistant who answer questions"
+        content:`
+        Today's date is: ${new Date().toDateString()}
+        You are an assistant who answer questions
+        If you know the answer directly then answer it
+        If u require real time data then You can use topic_searching
+        method to get real time data
+        Examples:
+        What is the capital of france?
+        paris(answer directly)
+        what is the weather of paris?
+        (use toolcall)`
+        
+        
+        
       },
       
      
     ]
-async function topic_searching(querey){
+async function topic_searching(query){
  console.log("ai")
  
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-const response = await tvly.search(querey);
+const response = await tvly.search(query);
 const final=response.results.map(result=>result.content);
-
-return final;
+return final.join("\n");
 
 }
 

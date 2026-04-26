@@ -85,7 +85,7 @@
 <div class="app">
 
   <header>
-    <div class="logo">
+    <div class="logo">x
       <div class="logo-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="#00ffc8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -139,8 +139,32 @@
   const inputEl    = document.getElementById('input');
   const sendBtn    = document.getElementById('send-btn');
   const emptyState = document.getElementById('empty-state');
+  let chatId = localStorage.getItem("chatId");
+
+if (!chatId) {
+  chatId = crypto.randomUUID();
+  localStorage.setItem("chatId", chatId);
+}
 
   let isLoading = false;
+  async function loadChatHistory() {
+  try {
+    const res = await fetch(`http://localhost:3000/messages/${chatId}`);
+    const data = await res.json();
+
+    data.forEach(msg => {
+      appendMessage(
+        msg.sender === "user" ? "user" : "bot",
+        msg.message
+      );
+    });
+
+    emptyState.style.display = data.length ? "none" : "flex";
+
+  } catch (err) {
+    console.error("Failed to load chat history:", err);
+  }
+}
 
   // ── Input wiring ──────────────────────────────────────
   inputEl.addEventListener('input', () => {
@@ -192,7 +216,7 @@
       const response = await fetch('http://localhost:3000/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text,chatId })
       });
 
       typingRow.remove();
@@ -271,6 +295,7 @@
   function scrollToBottom() {
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
+  loadChatHistory();
 </script>
 </body>
 </html>
