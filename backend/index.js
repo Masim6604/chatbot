@@ -22,17 +22,31 @@ app.use(express.urlencoded({ extended: true }));
 app.post('/', async (req, res) => {
   console.log(req.body);
 try {
+
 const id=req.body.chatId;
 const messages=req.body.message;
 const NewMessage={chatId:id,
   message:messages,
   sender:"user",
 }
+
+const history = await Message.find({ chatId })
+  .sort({ createdAt: -1 })
+  .limit(5);
+  history.reverse();
+  const context = history.map(m => `${m.sender}: ${m.message}`).join("\n");
+  const finalPrompt = `
+Context:
+${context}
+
+user: ${messages}
+ai:
+`;
+
+
+
+const result = await main(finalPrompt);
 await Message.create(NewMessage);
-
-
-
-const result = await main(req.body.message);
 const Airesponse={
   chatId:req.body.chatId,
   sender:"ai",
